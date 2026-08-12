@@ -1,0 +1,8 @@
+.pio/
+.pioenvs/
+.piolibdeps/
+.vscode/
+.DS_Store
+
+# Wi-Fi credentials / API token - never commit these
+include/secrets.h
