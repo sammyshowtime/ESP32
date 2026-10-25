@@ -66,3 +66,15 @@ static const char *const SWITCH_NAMES[SWITCH_COUNT] = {
 
 // Restore the last switch/dimmer state from flash after a reboot or power cut.
 #define RESTORE_STATE_ON_BOOT true
+
+// --- Sticker passes ---------------------------------------------------------
+// Printable QR stickers that let a guest use the remote. Only meaningful when
+// API_TOKEN is set - without it the remote is open to everyone anyway.
+#define PASS_MAX 32 // stored passes; spent one-time passes are recycled first
+
+// A location-locked sticker only works while the remote sits on the network it
+// was printed on. true pins it to that exact router (its BSSID), so a copy of
+// your network name elsewhere doesn't count. Set false to match on the network
+// name instead - use that with mesh Wi-Fi, where the remote may hop between
+// nodes that each have their own BSSID.
+#define PASS_LOCK_TO_BSSID true

@@ -17,4 +17,9 @@ String ssid();             // network joined, or the AP we are broadcasting
 IPAddress ip();            // address the web UI is reachable on
 int rssi();                // signal strength in dBm, 0 in AP mode
 
+// Identifies where the remote is, for location-locked sticker passes: the
+// router's BSSID (or network name, see PASS_LOCK_TO_BSSID), or "ap" while on
+// the fallback access point.
+String placeId();
+
 } // namespace net

@@ -24,6 +24,9 @@ phone / laptop  ──HTTP──>  ESP32  ──GPIO──>  relays, LEDs, motor
   NVS (batched, so dragging the slider doesn't wear out the flash).
 - **mDNS** — reachable at `http://esp32-remote.local`.
 - **Optional token auth** on the API.
+- **Printable sticker passes** — tiny QR stickers that let a guest use the
+  remote. Each can be locked to the location it was printed at, work anywhere,
+  and/or be a one-time pass.
 - **Status LED** heartbeat: slow blink when joined to your Wi-Fi, fast blink
   while on the fallback access point.
 
@@ -134,6 +137,61 @@ The web UI prompts for the token on the first unauthorised request and
 remembers it in `localStorage`. This is plain HTTP on your LAN — the token
 keeps casual visitors out, it is not a substitute for network security.
 
+## Sticker passes
+
+Sticker passes let you hand out access without giving away your API token:
+print a small QR sticker, stick it on a hat (or anywhere), and whoever scans it
+gets the remote on their phone. They can use the controls but can't print or
+revoke stickers.
+
+Open the web UI as the admin (with your token) and scroll to **Print sticker
+passes**. Pick the text, how many, and the size (20–50 mm), then choose:
+
+- **Lock to this location** (on by default) — the sticker only works while the
+  remote is on the network it was on when you printed it. Move the remote
+  somewhere else and the sticker stops working; bring it back and it works
+  again. Untick this for a sticker with **no location lock** that works
+  anywhere.
+- **One-time pass** — the sticker works for a single action (one switch, the
+  all on/off buttons or one dimmer change), then it's spent. Looking at the
+  remote doesn't use it up, only pressing something does. Every sticker in a
+  one-time batch gets its own code.
+
+The two settings combine freely, so you can have a one-time pass that also
+works anywhere. **Print stickers** opens your browser's print dialog with a
+sheet of stickers at the chosen size. For a thermal label printer, tick **One
+sticker per page** and set the paper size to your label size. The list under
+the button shows every sticker with its status, and lets you reprint or revoke
+one. A revoked sticker stops working immediately.
+
+Things worth knowing:
+
+- Set `API_TOKEN`. Without it, anyone on your network can use the remote
+  without a sticker, and the UI warns you about that.
+- The QR code points at the remote's IP address by default. Give the ESP32 a
+  DHCP reservation on your router so the address doesn't change under printed
+  stickers, or switch **Link uses** to the `.local` hostname. Some Android
+  phones can't resolve `.local` names.
+- "Location" means the router the ESP32 is joined to (its BSSID). With mesh
+  Wi-Fi the remote may hop between nodes, so set `PASS_LOCK_TO_BSSID` to
+  `false` in `config.h` to lock to the network name instead. Stickers printed
+  while the remote is on its fallback access point are tied to that mode.
+- Up to `PASS_MAX` (32) stickers are stored, and they survive reboots. When
+  storage is full, spent one-time passes are cleared to make room. After that
+  you need to revoke stickers yourself.
+
+API, all admin-only:
+
+| Method   | Path                                            | Purpose                      |
+| -------- | ----------------------------------------------- | ---------------------------- |
+| `GET`    | `/api/passes`                                   | List stickers                |
+| `POST`   | `/api/passes?count=N&lock=1\|0&once=1\|0&label=T` | Create `N` stickers          |
+| `DELETE` | `/api/passes?code=CODE`                         | Revoke a sticker             |
+
+A guest's requests carry the code as `?pass=CODE` (or an `X-Pass` header) in
+place of the token. A pass that is spent, revoked or used away from its
+location gets `403` with a message saying which.
+
 ## Customising
 
 Everything worth changing is in [`include/config.h`](include/config.h): pin
@@ -151,5 +209,6 @@ src/main.cpp            setup/loop and the status LED
 src/net.*               Wi-Fi, AP fallback, mDNS
 src/outputs.*           GPIO/PWM state and NVS persistence
 src/web_server.*        HTTP routes and JSON
-src/index_html.h        the web UI, embedded in flash
+src/passes.*            sticker passes and their storage
+src/index_html.h        the web UI (and its QR encoder), embedded in flash
 ```

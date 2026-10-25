@@ -114,4 +114,14 @@ IPAddress ip() { return station ? WiFi.localIP() : WiFi.softAPIP(); }
 
 int rssi() { return station ? WiFi.RSSI() : 0; }
 
+String placeId() {
+  if (!station) {
+    return "ap";
+  }
+  if (PASS_LOCK_TO_BSSID) {
+    return WiFi.BSSIDstr();
+  }
+  return String("ssid:") + WiFi.SSID();
+}
+
 } // namespace net

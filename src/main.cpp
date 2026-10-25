@@ -9,6 +9,7 @@
 #include "config.h"
 #include "net.h"
 #include "outputs.h"
+#include "passes.h"
 #include "web_server.h"
 
 namespace {
@@ -38,6 +39,7 @@ void setup() {
   pinMode(STATUS_LED_PIN, OUTPUT);
   outputs::begin();
   net::begin();
+  passes::begin();
   web::begin();
 
   Serial.printf("[boot] ready at http://%s (http://%s.local)\n",
